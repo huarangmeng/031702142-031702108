@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="jquery.js"></script>
+
+    <!--导入样式文件和js文件 jquery要在ztree之前引入-->
+
+    <link rel="stylesheet" href="css/zTreeStyle/zTreeStyle.css" type="text/css">
+    <script src="js/jquery-1.4.4.min.js"></script>
+    <script src="js/jquery.ztree.all.min.js"></script>
+
+</head>
+
+<body>
+
+<textarea type="text" id="inp" style="width: 200px ;height: 100px"></textarea>
+
+<button type="button" id="reset"onclick="getString()">提交</button>
+
+<!--创建放置树的容器-->
+<ul id="ztree1" class="ztree">
+
+</ul>
+
+<!--  <button onclick="getCheckedNode()">获取已选的数据</button>
+暂时无用
+-->
+</body>
+<script>
+    function getString(separator) {
+        let str; //输入的信息
+        str = document.getElementById("inp").value;
+
+        if(str == null || str == ""){ //未输入信息点击提交按钮出现提示
+            alert("请输入学术家族树");
+            return false;
+        }
+
+        var treenode = 0;  //多课树
+        var num = 100;     //一级根的编号
+        var student =  1000;  //二级根的编号
+
+        for(var i = 0; i < str.length;i++){
+            if(str[i] == "导"&& str[i+1] == "师" &&str[i+2] == "："){
+                var name;
+                var k = 0;
+                for(var j = i+3;j < str.length;j++){
+                    if(str[j] == "\n") {//导师名字输入完成
+                        k = j;
+                        break;
+                    }
+                }
+                if(k == 0) k = str.length-1;
+                name = "导师：" + str.substring(i+3,k);
+                zNodes1.push({"id":++treenode,"pId":0,"name":name});//加入节点
+
+            }else if(myIsNaN(str[i])){
+                var name;
+                var k;
+                for(var j = i;j < str.length ;j++){
+                    if(str[j] == "："){//毕业级数及学位
+                        k = j;
+                        break;
+                    }
+                }
+                name = str.substring(i,k);
+                zNodes1.push({"id":++num,"pId":treenode,"name":name}); //加入节点
+
+                for(var j = k;j < str.length;j++){
+                    if(str[j]=="\n"){//一行输入结束
+                        i = j;
+                        break;
+                    }
+                    else if(str[j]=="、"){// “、”直接跳过
+                        continue;
+                    }
+                    else if(str[j] != "："){// 冒号后为人名
+                        for(var q = j;q < str.length;q++){
+                            if(str[q]=="、"){
+                                k = q-1;
+                                break;
+                            }
+                            if(str[q] =="\n"){ //人名输入结束
+                                k = q-1;
+                                break;
+                            }
+                        }
+                        if(k < j) k = str.length;
+                        name = str.substring(j,k+1);
+                        zNodes1.push({"id":++student,"pId":num,"name":name});//加入节点
+                        j = k;
+                    }
+                    i = j;
+                }
+            }
+        }
+        //初始化第一个树
+        $.fn.zTree.init($("#ztree1"), setting1, zNodes1);
+        document.getElementById("inp").style.display="none";
+        document.getElementById("reset").style.display="none";
+    }
+</script>
+
+<script>
+    $(function() {
+
+        //树节点数据
+        zNodes1 = [
+        ];
+
+        //创建ztree的配置对象
+        setting1 = {
+            treeId: "ztree1",
+            data: {
+                simpleData: {
+                    enable: true, //设置使用简单数据格式
+                    idKey: "id", //id标识  可以修改为数据库对应字段
+                    pIdKey: "pId", //父级id
+                    rootPId: 0, //根节点id
+                }
+            },
+            //设置点击事件
+            callback: {
+                onClick: function(event, treeId, treeNode, clickFlag) {
+                    console.log(treeNode.name)
+                }
+            },
+            check: {
+                enable: true, //是否显示 checkbox/radio
+                chkStyle: "radio", //设置显示类型 值可选：radio/checkbox
+            }
+        }
+
+    })
+
+    function getCheckedNode() {
+        //获取选中的数据
+
+        //获取指定id的tree对象
+        var treeObj = $.fn.zTree.getZTreeObj("ztree1");
+
+        //获取选中的数据
+        var checkedNods = treeObj.getCheckedNodes();
+
+        console.log(checkedNods)
+    }
+</script>
+
+<script>
+    function myIsNaN(value) {
+        if(value == "0"||value=="1"||value=="2"||value=="3"||value=="4"||value=="5"||value=="6"||value=="7"||value=="8"||value=="9") return true;
+        else return false;
+    }
+</script>
+</html>
